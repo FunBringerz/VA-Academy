@@ -75,7 +75,7 @@ export default function AdminUsers() {
             <div>
               <div className="text-[10px] uppercase tracking-[0.3em] text-brand-accent font-bold mb-2">Trainee Profile</div>
               <h2 className="text-4xl font-serif text-brand-primary mb-1">
-                {typeof selectedTrainee.full_name === 'string' ? selectedTrainee.full_name : (selectedTrainee.full_name ? `${selectedTrainee.full_name.first} ${selectedTrainee.full_name.mi ? selectedTrainee.full_name.mi + '.' : ''} ${selectedTrainee.full_name.last}` : selectedTrainee.username)}
+                {typeof selectedTrainee.full_name === 'string' ? selectedTrainee.full_name : (selectedTrainee.full_name ? `${selectedTrainee.full_name.first || ''} ${selectedTrainee.full_name.mi ? selectedTrainee.full_name.mi + '.' : ''} ${selectedTrainee.full_name.last || ''}`.trim() : selectedTrainee.username)}
               </h2>
               <p className="text-brand-primary/40 font-mono text-xs italic">@{selectedTrainee.username}</p>
             </div>
@@ -236,7 +236,7 @@ export default function AdminUsers() {
                   >
                     <td className="p-6">
                       <div className="font-serif text-brand-primary group-hover:text-brand-accent transition">
-                        {typeof trainee.full_name === 'string' ? trainee.full_name : (trainee.full_name ? `${trainee.full_name.last}, ${trainee.full_name.first}` : 'N/A')}
+                        {typeof trainee.full_name === 'string' ? trainee.full_name : (trainee.full_name ? `${trainee.full_name.last || ''}, ${trainee.full_name.first || ''}`.replace(/^,\s*|\s*,\s*$/g, '') : 'N/A')}
                       </div>
                     </td>
                     <td className="p-6">
