@@ -4,6 +4,9 @@ import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const PORT = 3000;
@@ -40,6 +43,31 @@ const mockBatches: any[] = [
   { id: '1', name: 'Batch 1', created_at: new Date().toISOString() }
 ];
 let nextBatchId = 2;
+
+const mockLeads: any[] = [
+  {
+    id: '1',
+    user_id: '2',
+    product_name: 'Example Product',
+    amazon_asin: 'B00EXAMPLE',
+    amazon_link: 'https://amazon.com',
+    source_link: 'https://supplier.com',
+    screenshot_url: '',
+    cost_price: 10,
+    sale_price: 25,
+    profit: 10,
+    roi: 100,
+    bsr: 50000,
+    sales_per_month: 100,
+    is_hazmat: false,
+    is_fragile: false,
+    trainee_comment: 'Looks like a good deal.',
+    lead_remark: 'Pending',
+    admin_comment: '',
+    created_at: new Date().toISOString()
+  }
+];
+let nextLeadId = 2;
 
 // Middleware
 app.use(express.json());
@@ -508,7 +536,28 @@ app.post('/api/leads', authenticateToken, async (req: Request, res: Response) =>
     const leadData = req.body;
 
     if (!supabase) {
-      return res.status(500).json({ error: 'Supabase not configured. Cannot save lead.' });
+      const newLeadMock = {
+        id: String(nextLeadId++),
+        user_id: user.id,
+        product_name: leadData.product_name,
+        amazon_asin: leadData.amazon_asin,
+        amazon_link: leadData.amazon_url,
+        source_link: leadData.supplier_url,
+        screenshot_url: leadData.screenshot_url,
+        cost_price: leadData.cost_price,
+        sale_price: leadData.sale_price,
+        profit: leadData.profit,
+        roi: leadData.roi,
+        bsr: leadData.bsr,
+        sales_per_month: leadData.sales_per_month,
+        is_hazmat: leadData.is_hazmat || false,
+        is_fragile: leadData.is_fragile || false,
+        trainee_comment: leadData.trainee_comment,
+        lead_remark: 'Pending',
+        created_at: new Date().toISOString()
+      };
+      mockLeads.push(newLeadMock);
+      return res.status(201).json({ message: 'Lead added successfully', lead: newLeadMock });
     }
 
     // Check if product already submitted in the past month by anyone in the same batch
@@ -567,7 +616,10 @@ app.get('/api/leads', authenticateToken, async (req: Request, res: Response) => 
     const user = (req as any).user;
     
     if (!supabase) {
-      return res.json({ leads: [] });
+      // Filter leads by batch_id by checking corresponding profiles
+      const batchUsers = mockUsers.filter(u => u.batch_id === user.batch_id).map(u => String(u.id));
+      const userLeads = mockLeads.filter(l => batchUsers.includes(String(l.user_id)));
+      return res.json({ leads: userLeads });
     }
 
     // Try with join first
@@ -803,28 +855,18 @@ app.get('/api/admin/leads', authenticateToken, requireAdmin, async (req: Request
     const { batch_id } = req.query;
 
     if (!supabase) {
-      // Mock data for leads
-      let mockLeads = [
-        {
-          id: '1',
-          trainee_id: '2',
-          user: { username: 'trainee1', full_name: 'John Doe', batch_id: 'ADMIN_BATCH' },
-          lead_remark: 'Pending',
-          admin_comment: '',
-          created_at: new Date().toISOString(),
-          product_name: 'Example Product',
-          amazon_asin: 'B00EXAMPLE',
-          cost_price: 10,
-          sale_price: 25,
-          profit: 10,
-          roi: 100
-        }
-      ];
+      let resultLeads = [...mockLeads].map(lead => {
+        const user = mockUsers.find(u => String(u.id) === String(lead.user_id));
+        return {
+          ...lead,
+          user: user ? { username: user.username, full_name: user.full_name, batch_id: user.batch_id } : null
+        };
+      });
 
-      if (batch_id) {
-        mockLeads = mockLeads.filter(l => l.user.batch_id === batch_id);
+      if (batch_id && batch_id !== 'all') {
+        resultLeads = resultLeads.filter(l => l.user && l.user.batch_id === batch_id);
       }
-      return res.json({ leads: mockLeads });
+      return res.json({ leads: resultLeads });
     }
 
     // Try selecting without the hint first, or use the explicit relationship name
@@ -881,7 +923,12 @@ app.put('/api/admin/leads/:id/remark', authenticateToken, requireAdmin, async (r
     const { remark, comment } = req.body;
 
     if (!supabase) {
-      return res.status(500).json({ error: 'Supabase not configured' });
+      const idx = mockLeads.findIndex(l => String(l.id) === String(id));
+      if (idx !== -1) {
+        mockLeads[idx] = { ...mockLeads[idx], lead_remark: remark, admin_comment: comment };
+        return res.json({ message: 'Lead updated successfully (Mock)' });
+      }
+      return res.status(404).json({ error: 'Lead not found in mock data' });
     }
 
     const { error } = await supabase
