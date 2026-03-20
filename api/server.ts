@@ -1,5 +1,4 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { createServer as createViteServer } from 'vite';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
@@ -1792,23 +1791,7 @@ app.get('/api/admin/quiz-progress/:batch_id', async (req, res) => {
   }
 });
 
-// --- Vite Integration ---
-async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-
-  // --- Batch Schedules API ---
+// --- Batch Schedules API ---
 app.get('/api/admin/batch-schedules/:batch_id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { batch_id } = req.params;
@@ -1858,6 +1841,24 @@ app.post('/api/admin/batch-schedules', authenticateToken, requireAdmin, async (r
     res.status(500).json({ error: error.message });
   }
 });
+
+// --- Vite Integration ---
+async function startServer() {
+  if (process.env.NODE_ENV !== 'production') {
+    const viteModule = await import('vite');
+    const createViteServer = viteModule.createServer;
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
 
   if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, '0.0.0.0', () => {
