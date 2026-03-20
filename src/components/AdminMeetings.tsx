@@ -116,7 +116,7 @@ export default function AdminMeetings({ user }: { user: any }) {
   const filteredTrainees = trainees.filter(t => {
     const name = typeof t.full_name === 'string' 
       ? t.full_name.toLowerCase() 
-      : (t.full_name ? `${t.full_name.first} ${t.full_name.last}`.toLowerCase() : t.username.toLowerCase());
+      : (t.full_name ? `${t.full_name.first || ''} ${t.full_name.last || ''}`.trim().toLowerCase() : t.username.toLowerCase());
     return name.includes(searchQuery.toLowerCase());
   });
 
@@ -230,7 +230,7 @@ export default function AdminMeetings({ user }: { user: any }) {
                       <span className="text-[10px] uppercase tracking-wider font-bold">
                         {typeof u.full_name === 'string' 
                           ? u.full_name 
-                          : (u.full_name ? `${u.full_name.first} ${u.full_name.last}` : u.username)}
+                          : (u.full_name ? `${u.full_name.first || ''} ${u.full_name.last || ''}`.trim() : u.username)}
                       </span>
                     </label>
                   ))}
