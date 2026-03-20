@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import path from 'path';
@@ -44,6 +44,8 @@ let nextBatchId = 2;
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+// Trust proxy to ensure secure cookies work properly on Vercel
+app.set('trust proxy', 1);
 
 // --- Authentication Middleware ---
 
@@ -1852,15 +1854,7 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
 
-  if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on http://localhost:${PORT}`);
       
@@ -1890,9 +1884,18 @@ async function startServer() {
       };
       seedDay1();
     });
+  } else if (!process.env.VERCEL) {
+    // Only serve static files if we are NOT on Vercel
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
   }
 }
-
 // Initialize server routes
 startServer();
 
