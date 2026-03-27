@@ -166,7 +166,7 @@ export default function AdminLeads() {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-serif italic text-brand-primary">
-                    {lead.user?.full_name ? `${lead.user.full_name.first} ${lead.user.full_name.last}` : lead.user?.username || 'Unknown'}
+                    {typeof lead.user?.full_name === 'string' ? lead.user.full_name : (lead.user?.full_name ? `${lead.user.full_name.first || ''} ${lead.user.full_name.last || ''}`.trim() : lead.user?.username || 'Unknown')}
                   </td>
                   <td className="px-6 py-4 text-brand-primary/60">
                     {new Date(lead.created_at).toLocaleDateString()}

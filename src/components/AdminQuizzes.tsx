@@ -483,7 +483,7 @@ export default function AdminQuizzes() {
   }, {});
 
   const filteredTrainees = Object.values(traineeProgress).filter((tp: any) => {
-    const name = typeof tp.trainee.full_name === 'string' ? tp.trainee.full_name : (tp.trainee.full_name ? `${tp.trainee.full_name.first} ${tp.trainee.full_name.last}` : tp.trainee.username);
+    const name = typeof tp.trainee.full_name === 'string' ? tp.trainee.full_name : (tp.trainee.full_name ? `${tp.trainee.full_name.first || ''} ${tp.trainee.full_name.last || ''}`.trim() : tp.trainee.username);
     return name.toLowerCase().includes(searchTerm.toLowerCase()) || tp.trainee.username.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -596,7 +596,7 @@ export default function AdminQuizzes() {
                 </tr>
               ) : (
                 filteredTrainees.map((tp: any) => {
-                  const name = typeof tp.trainee.full_name === 'string' ? tp.trainee.full_name : (tp.trainee.full_name ? `${tp.trainee.full_name.first} ${tp.trainee.full_name.last}` : tp.trainee.username);
+                  const name = typeof tp.trainee.full_name === 'string' ? tp.trainee.full_name : (tp.trainee.full_name ? `${tp.trainee.full_name.first || ''} ${tp.trainee.full_name.last || ''}`.trim() : tp.trainee.username);
                   return (
                     <tr key={tp.trainee.id} className="hover:bg-brand-secondary/30 transition group">
                       <td className="p-6">

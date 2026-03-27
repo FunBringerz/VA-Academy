@@ -182,7 +182,7 @@ export default function Chat({ user }: { user: any }) {
               >
                 {trainees.map(t => (
                   <option key={t.id} value={t.id}>
-                    {t.username} ({typeof t.full_name === 'object' ? `${t.full_name.first} ${t.full_name.last}` : t.full_name})
+                    {t.username} ({typeof t.full_name === 'object' ? `${t.full_name.first || ''} ${t.full_name.last || ''}`.trim() : t.full_name})
                   </option>
                 ))}
               </select>
@@ -215,7 +215,7 @@ export default function Chat({ user }: { user: any }) {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-brand-primary/60">
                       {isMe ? 'Self' : (
                         msg.sender?.full_name 
-                          ? (typeof msg.sender.full_name === 'string' ? msg.sender.full_name : `${msg.sender.full_name.first} ${msg.sender.full_name.last}`)
+                          ? (typeof msg.sender.full_name === 'string' ? msg.sender.full_name : `${msg.sender.full_name.first || ''} ${msg.sender.full_name.last || ''}`.trim())
                           : msg.sender?.username || 'Anonymous'
                       )}
                     </span>
